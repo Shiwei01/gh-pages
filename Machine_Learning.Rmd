@@ -1,0 +1,74 @@
+---
+title: "Project of Practical Machine Learning"
+author: "Shiwei"
+output: html_document
+---
+Introduction
+---
+This project focuses on analysing dataset "Weight Lifting Exercise" in order to predict the manner in which they did the exercise.
+
+
+## 1. Library / Data 
+```{r,cache=TRUE}
+library(knitr)
+library(ggplot2)
+library(caret)
+
+## download.file(url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",destfile = "./data/weight.csv",method="curl")   
+training_data<-read.csv("./data/weight.csv")
+
+## download.file(url = "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv",destfile = "./data/weight2.csv",method="curl")
+testing_data<-read.csv("./data/weight2.csv")
+```
+
+### Data Cleaning ( Exclude thosed variables with a lot of NAs and useless vairables )
+```{r,cache=TRUE}
+set.seed(110)
+training_data[is.na(training_data)]<-0
+nearZero<-nearZeroVar(training_data)
+dat<-training_data[,-nearZero]
+dat<-dat[,-(1:6)]
+```
+
+### Divide the original training data into two parts ( 70% training and 30% testing)
+```{r,cache=TRUE}
+inTrain<-createDataPartition(dat$classe,p=0.7,list=F)
+training<-dat[inTrain,]
+testing<-dat[-inTrain,]
+```
+
+### Model select: Using classe as the response variable and all other variables as predictors, training method I use random forest, cross validation I use repeat cross validation with 10 folds and 5 repeats.
+
+```{r,cache=TRUE}
+modelFit<-train(classe ~ . ,data=training,
+           method="rf", trControl = trainControl(method = "repeatedcv",number=10,repeats=5),verbose=F)
+```
+
+According to the above results:
+* The final model has 0.993 Accuracy and 0.991 Kappa.
+
+### Envaluate model on testing set. 
+```{r,cache=TRUE}
+prediction<-predict(modelFit,testing)
+confusionMatrix(prediction,testing$classe)
+```
+
+According the above results:
+* The test accuracy is 0.994
+* Both Sensitivity and Specificity of foour classes have very high value which is so good.
+
+### Plot the model
+```{r,cache=TRUE}
+plot(modelFit)
+```
+
+* we can see that most models have very high value of accuracy, and the final model (27th) reaches the top.
+
+### Summary
+
+Since the data is non-linear, So method random froest is used as model classficition. In addtion, since the data is big, and it has many NAs, which significantly affect the performance of data training. So we have to clean data and pick variables that are usefull. From the result, the random forest works so well, however it still took a big comptational time.
+
+
+### References
+
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human ’13) . Stuttgart, Germany: ACM SIGCHI, 2013.
