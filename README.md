@@ -1,3 +1,3 @@
 # gh-pages
 
-## This is read me.
+Not really familiar with github, if any inconvinence caused, so sorry about it.
